@@ -226,42 +226,46 @@ public class Menu extends javax.swing.JFrame {
     
     private void setTrademarkMenu(){
         jsonKey_Models = (JSONObject)json_file.get("models");
-        String[] trademarkMenu = new String[jsonKey_Models.size()];
+        String[] trademarkMenu = new String[jsonKey_Models.size() + 1];
+        trademarkMenu[0] = "Marca";
         Iterator itr = jsonKey_Models.keySet().iterator();
         int k = 0;
         while (itr.hasNext()){
             String key = (String)itr.next();
-            trademarkMenu[k] = key;
+            trademarkMenu[k + 1] = key;
             k++;
         }
         
-        Arrays.sort(trademarkMenu);
+        Arrays.sort(trademarkMenu, 1, jsonKey_Models.size());
         trademark.setModel(new javax.swing.DefaultComboBoxModel<>(trademarkMenu));
-        
         setModelMenu(trademarkMenu[0]);
                 
     }
     
     private void setModelMenu(String key){
-        JSONObject modelsDict = (JSONObject)jsonKey_Models.get(key);
-        modelsDict = (JSONObject)modelsDict.get("models");
-        
-        Iterator itr = modelsDict.keySet().iterator();
-        String[] modelMenu = new String[modelsDict.size()];
-        int k = 0;
-        while (itr.hasNext()){
-            key = (String)itr.next();
-            modelMenu[k] = key;
-            k++;
+        if (!key.equals("Marca")){
+            JSONObject modelsDict = (JSONObject)jsonKey_Models.get(key);
+            modelsDict = (JSONObject)modelsDict.get("models");
+            String[] modelMenu = new String[modelsDict.size()];
+            Iterator itr = modelsDict.keySet().iterator();
+            
+            int k = 0;
+            while (itr.hasNext()){
+                key = (String)itr.next();
+                modelMenu[k] = key;
+                k++;
+            }
+            Arrays.sort(modelMenu);
+            model.setModel(new javax.swing.DefaultComboBoxModel<>(modelMenu));
+        } else{
+            String[] modelMenu = new String[]{"Modelos"};
+            model.setModel(new javax.swing.DefaultComboBoxModel<>(modelMenu));
         }
-        Arrays.sort(modelMenu);
-        model.setModel(new javax.swing.DefaultComboBoxModel<>(modelMenu));
-
-    }
+}
     
     private void setTimeMenu(){
         jsonKey_Time = (JSONArray)json_file.get("time");
-        String[] timeMenu = new String[jsonKey_Time.size()];
+        String[] timeMenu = new String[jsonKey_Time.size() + 1];
         for (int k = 0; k < jsonKey_Time.size(); k++){
             timeMenu[k] = String.valueOf(jsonKey_Time.get(k));
         }
