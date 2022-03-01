@@ -201,11 +201,14 @@ public class Menu extends javax.swing.JFrame {
     	String currentYearEnd = String.valueOf(yearend.getSelectedItem());
     	String currentChange = String.valueOf(change.getSelectedItem());
     	String currentKm = String.valueOf(km.getText());
-    	
-    	ScrapPython scraper = 
-    			new ScrapPython(currentWebpage, currentTrademark, 
-    					currentModel, currentYearStart, currentYearEnd,
-    					currentChange, currentKm);
+        File f = new File("src/main/java/files/milanuncios.py");
+        String path = f.getAbsolutePath();
+        
+        ScrapPython pyprocess = 
+                new ScrapPython(currentWebpage, currentTrademark,
+                currentModel, currentYearStart, currentYearEnd,
+                currentChange, currentKm);
+        pyprocess.start();
         
     }//GEN-LAST:event_downloadActionPerformed
     private JSONObject json_file;
@@ -258,7 +261,7 @@ public class Menu extends javax.swing.JFrame {
             Arrays.sort(modelMenu);
             model.setModel(new javax.swing.DefaultComboBoxModel<>(modelMenu));
         } else{
-            String[] modelMenu = new String[]{"Modelos"};
+            String[] modelMenu = new String[]{"Modelo"};
             model.setModel(new javax.swing.DefaultComboBoxModel<>(modelMenu));
         }
 }
