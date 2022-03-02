@@ -4,14 +4,19 @@
  */
 package GUI;
 
-import java.util.List;
+import java.awt.Color;
+import java.awt.Component;
+import java.util.Vector;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.ListIterator;  
+import java.util.concurrent.ArrayBlockingQueue;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
 
 import java.io.File;
 import modules.JSONReader;
 import modules.ScrapPython;
+import modules.QueueObserver;
 
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
@@ -25,8 +30,15 @@ public class Menu extends javax.swing.JFrame {
     /**
      * Creates new form Menu
      */
+    int cap = 100;
+    ArrayBlockingQueue<Thread> queue;
+    QueueObserver observer;
+    
     public Menu() {
         initComponents();
+        queue = new ArrayBlockingQueue<>(cap);
+        observer = new QueueObserver(queue);
+        observer.start();
         setAll();
     }
 
@@ -50,7 +62,23 @@ public class Menu extends javax.swing.JFrame {
         download = new javax.swing.JButton();
         table_panel = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
+        table = new javax.swing.JTable() {
+        	@Override
+            public Component prepareRenderer(TableCellRenderer renderer, int row, int col) {
+                Component comp = super.prepareRenderer(renderer, row, col);
+                Object value = getModel().getValueAt(row, col);
+
+                    if (value.equals("No")) {
+                        comp.setBackground(Color.red);
+                    } else if (value.equals("Si")) {
+                        comp.setBackground(Color.green);
+                    } else {
+                        comp.setBackground(Color.white);
+                    }
+
+                return comp;
+            }
+        };
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("CarScraper");
@@ -125,18 +153,23 @@ public class Menu extends javax.swing.JFrame {
         table_panel.setPreferredSize(new java.awt.Dimension(100, 100));
         table_panel.setLayout(new java.awt.BorderLayout());
 
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+        table.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
+
             },
             new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
+                "Página", "Marca", "Modelo", "Desde", "Hasta", "Cambio", "Km", "Descargado"
             }
-        ));
-        jScrollPane1.setViewportView(jTable1);
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false, false, false, false
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jScrollPane1.setViewportView(table);
 
         table_panel.add(jScrollPane1, java.awt.BorderLayout.CENTER);
 
@@ -201,14 +234,38 @@ public class Menu extends javax.swing.JFrame {
     	String currentYearEnd = String.valueOf(yearend.getSelectedItem());
     	String currentChange = String.valueOf(change.getSelectedItem());
     	String currentKm = String.valueOf(km.getText());
-        File f = new File("src/main/java/files/milanuncios.py");
-        String path = f.getAbsolutePath();
+        
+        DefaultTableModel tableModel = (DefaultTableModel) table.getModel();
+        String[] newRow = {currentWebpage, currentTrademark,
+            currentModel, currentYearStart, currentYearEnd, currentChange,
+            currentKm, "No"};
+        
+        tableModel.addRow(newRow);
+        int id = 0;
+        boolean cond = false ;
+        for (int k = 0; k < tableModel.getRowCount(); k++){
+            for (String s : newRow){
+                if(tableModel.getDataVector().get(k).contains(s)){
+                    cond = true;
+                } else{
+                    cond = false;
+                }
+            }
+            if (cond){
+                id = k;
+            }
+        }
+        
+        System.out.println(id);
+        
         
         ScrapPython pyprocess = 
                 new ScrapPython(currentWebpage, currentTrademark,
-                currentModel, currentYearStart, currentYearEnd,
-                currentChange, currentKm);
-        pyprocess.start();
+            currentModel, currentYearStart, currentYearEnd,
+            currentChange, currentKm, tableModel, id);
+                
+        queue.add(pyprocess);
+        table.setSelectionBackground(Color.green);
         
     }//GEN-LAST:event_downloadActionPerformed
     private JSONObject json_file;
@@ -315,9 +372,9 @@ public class Menu extends javax.swing.JFrame {
     private javax.swing.JComboBox<String> change;
     private javax.swing.JButton download;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTable jTable1;
     private javax.swing.JTextField km;
     private javax.swing.JComboBox<String> model;
+    private javax.swing.JTable table;
     private javax.swing.JPanel table_panel;
     private javax.swing.JPanel toolbar_panel;
     private javax.swing.JComboBox<String> trademark;

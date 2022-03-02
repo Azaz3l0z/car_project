@@ -12,24 +12,24 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 public class JSONReader {
-    public JSONObject json_file;
-    public JSONObject read(String path) {
-            File f = new File(path);
-            try {
-                    JSONParser parser = new JSONParser();
-                    Object obj  = parser.parse(new FileReader(f.getAbsolutePath()));
-                    json_file =  (JSONObject) obj;
+	public JSONObject json_file;
+	public JSONObject read(String path) {
+		File f = new File(path);
+		try {
+			JSONParser parser = new JSONParser();
+			Object obj  = parser.parse(new FileReader(f.getAbsolutePath()));
+			json_file =  (JSONObject) obj;
 
 
-            } catch (FileNotFoundException e) {
-                    e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
 
-            } catch (Exception e) {
-                    e.printStackTrace();
-            }	
+		} catch (Exception e) {
+			e.printStackTrace();
+		}	
 
-            return json_file;
-    }
+		return json_file;
+	}
 }
 
 
