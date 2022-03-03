@@ -2,10 +2,9 @@ import os
 import re
 import json
 
-from time import sleep, time
 from bs4 import BeautifulSoup
-from datetime import datetime
 from threading import Thread
+from time import sleep
 
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
@@ -14,8 +13,6 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
-
-from azazelutils import dropbox_manager, info
 
 def read_json(path: str):
     with open(path, 'r+') as file:
@@ -81,7 +78,6 @@ class Scraper(object):
         self.get_tagList_items()
         th_phone.join()
         self.get_url()
-        #self.get_price()
 
     def close(self):
         self.driver.close()
@@ -89,13 +85,18 @@ class Scraper(object):
     def create_soup(self):
         # Selenium configuration    
         options = Options()
+
         options.add_argument("--headless")
         options.add_argument("--log-level=3")
 
-        self.driver: webdriver = webdriver.Chrome(options=options, executable_path = self.chromedriver_path)
+        self.driver = webdriver.Chrome(executable_path='chromedriver', options=options)
+        # NOTE: Care for the chromedriver file being installed properply. This version
+        #       works even when Chrome is not installed. It you use Service() you need
+        #       Chrome binaries installed
 
         # We paginate over n pages and get a selenium html object
         for n in range(1, self.pages + 1):
+            print(n)
             self.driver.get(self.url.format(pagina=n))
             self.scroll_down(self.driver)
             if '¡Vaya! Han volado los anuncios' in self.driver.page_source:
@@ -217,20 +218,11 @@ class Scraper(object):
 
 
 def main(json_path, trademark, model, yearstart, yearend, change, km):
-    # # Upload data to dropbox
-
-    # token = 'KjuflX1NCx4AAAAAAAAAAZC_0k_v9uPmWOQgRbWiuT1vaQBL8f7Zmmr38MQgCvk0'
-    # now = datetime.now().strftime('%d-%m-%Y_%H:%M:%S')
-    # name = f'{os.path.splitext(os.path.basename(__file__))[0]}_{now}.json'
-
-    # data = json.dumps(info.get_data()).encode('utf-8')
-    # dbx = dropbox_manager.Manager(token)
-    # dbx.upload_dropbox('/logs_cochesnet', name, data)
-
     # Code
     json_file = read_json(json_path)
     chrom_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'chromedriver')
     url, name = create_url(json_file, trademark, model, yearstart, yearend, change, km)
+    
     with open(os.path.join(os.path.dirname(json_path), 'name.txt'), 'w+') as file:
         file.write(name)
 
