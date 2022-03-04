@@ -6,12 +6,13 @@ package GUI;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.util.Vector;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.concurrent.ArrayBlockingQueue;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
+import javax.swing.JComponent;
+import javax.swing.border.*;
 
 import java.io.File;
 import modules.JSONReader;
@@ -66,15 +67,27 @@ public class Menu extends javax.swing.JFrame {
         	@Override
             public Component prepareRenderer(TableCellRenderer renderer, int row, int col) {
                 Component comp = super.prepareRenderer(renderer, row, col);
+                JComponent jc = (JComponent)comp;
                 Object value = getModel().getValueAt(row, col);
+                
+                Border outside = new MatteBorder(1, 0, 1, 0, Color.BLACK);
+    			Border inside = new EmptyBorder(0, 1, 0, 1);
+    			Border highlight = new CompoundBorder(outside, inside);
+    			
+    			if (isRowSelected(row)) {
+    				jc.setForeground(Color.black);
+    				jc.setBackground(Color.white);
+    				jc.setBorder(highlight);
+    			} else {
+    				jc.setForeground(Color.black);
+    				jc.setBackground(Color.white);
+    			}
 
-                    if (value.equals("No")) {
-                        comp.setBackground(Color.red);
-                    } else if (value.equals("Si")) {
-                        comp.setBackground(Color.green);
-                    } else {
-                        comp.setBackground(Color.white);
-                    }
+                if (value.equals("No")) {
+                    jc.setBackground(Color.red);
+                } else if (value.equals("Si")) {
+                    jc.setBackground(Color.green);
+                }
 
                 return comp;
             }
@@ -135,7 +148,7 @@ public class Menu extends javax.swing.JFrame {
         });
         toolbar_panel.add(km);
 
-        download.setText("Download");
+        download.setText("Descargar");
         download.setFocusable(false);
         download.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         download.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -190,26 +203,30 @@ public class Menu extends javax.swing.JFrame {
     private void yearstartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_yearstartActionPerformed
         String currentStart = (String)yearstart.getSelectedItem();
         String currentEnd = (String)yearend.getSelectedItem();
+        
+        if (currentEnd.equals("Hasta")){
+            currentEnd = "0";
+        }
         Long valStart = Long.parseLong(currentStart);
         Long valEnd = Long.parseLong(currentEnd);
+        int index = 0;
+        for (int k = 0; k < jsonKey_Time.size(); k++){
+            if (jsonKey_Time.get(k).equals(valStart)){
+                index = k;
+                break;
+            }            
+        }
 
-        if (valEnd < valStart){
-            int index = 0;
-            for (int k = 0; k < jsonKey_Time.size(); k++){
-                if (jsonKey_Time.get(k).equals(valStart)){
-                    index = k;
-                    break;
-                }            
-            }
+        String[] yearendMenu = new String[jsonKey_Time.size() - index + 1];
+        yearendMenu[0] = "Hasta";
+        for (int k = index; k < jsonKey_Time.size(); k++){
+            String year = String.valueOf(jsonKey_Time.get(k));
+            yearendMenu[k - index + 1] = year;
+        }
 
-            String[] yearendMenu = new String[jsonKey_Time.size() - index];
-
-            for (int k = index; k < jsonKey_Time.size(); k++){
-                String year = String.valueOf(jsonKey_Time.get(k));
-                yearendMenu[k - index] = year;
-            }
-
-            yearend.setModel(new javax.swing.DefaultComboBoxModel<>(yearendMenu));  
+        yearend.setModel(new javax.swing.DefaultComboBoxModel<>(yearendMenu));  
+        if (valStart <= valEnd){
+            yearend.setSelectedItem(currentEnd);
         }
 
     }//GEN-LAST:event_yearstartActionPerformed
@@ -265,8 +282,6 @@ public class Menu extends javax.swing.JFrame {
             currentChange, currentKm, tableModel, id);
                 
         queue.add(pyprocess);
-        table.setSelectionBackground(Color.green);
-        
     }//GEN-LAST:event_downloadActionPerformed
     private JSONObject json_file;
     private JSONObject jsonKey_Models;
@@ -282,6 +297,7 @@ public class Menu extends javax.swing.JFrame {
         kmText = km.getText();
         setTrademarkMenu();
         setTimeMenu();
+        setChangeMenu();
     }
     
     private void setTrademarkMenu(){
@@ -296,7 +312,7 @@ public class Menu extends javax.swing.JFrame {
             k++;
         }
         
-        Arrays.sort(trademarkMenu, 1, jsonKey_Models.size());
+        Arrays.sort(trademarkMenu, 1, trademarkMenu.length);
         trademark.setModel(new javax.swing.DefaultComboBoxModel<>(trademarkMenu));
         setModelMenu(trademarkMenu[0]);
                 
@@ -306,16 +322,17 @@ public class Menu extends javax.swing.JFrame {
         if (!key.equals("Marca")){
             JSONObject modelsDict = (JSONObject)jsonKey_Models.get(key);
             modelsDict = (JSONObject)modelsDict.get("models");
-            String[] modelMenu = new String[modelsDict.size()];
+            String[] modelMenu = new String[modelsDict.size() + 1];
+            modelMenu[0] = "Modelo";
             Iterator itr = modelsDict.keySet().iterator();
             
             int k = 0;
             while (itr.hasNext()){
                 key = (String)itr.next();
-                modelMenu[k] = key;
+                modelMenu[k + 1] = key;
                 k++;
             }
-            Arrays.sort(modelMenu);
+            Arrays.sort(modelMenu, 1, modelMenu.length);
             model.setModel(new javax.swing.DefaultComboBoxModel<>(modelMenu));
         } else{
             String[] modelMenu = new String[]{"Modelo"};
@@ -326,13 +343,21 @@ public class Menu extends javax.swing.JFrame {
     private void setTimeMenu(){
         jsonKey_Time = (JSONArray)json_file.get("time");
         String[] timeMenu = new String[jsonKey_Time.size() + 1];
+        timeMenu[0] = "Desde";  
         for (int k = 0; k < jsonKey_Time.size(); k++){
-            timeMenu[k] = String.valueOf(jsonKey_Time.get(k));
+            timeMenu[k + 1] = String.valueOf(jsonKey_Time.get(k));
         }
-        
+              
         yearstart.setModel(new javax.swing.DefaultComboBoxModel<>(timeMenu));
+        timeMenu[0] = "Hasta";  
         yearend.setModel(new javax.swing.DefaultComboBoxModel<>(timeMenu));
     }
+    
+    private void setChangeMenu(){
+        String[] changeMenu = new String[]{"Cambio", "Manual", "Automatico"};
+        change.setModel(new javax.swing.DefaultComboBoxModel<>(changeMenu));
+    }
+    
     /**
      * @param args the command line arguments
      */

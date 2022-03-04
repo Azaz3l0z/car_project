@@ -143,7 +143,7 @@
         </Component>
         <Component class="javax.swing.JButton" name="download">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Download"/>
+            <Property name="text" type="java.lang.String" value="Descargar"/>
             <Property name="focusable" type="boolean" value="false"/>
             <Property name="horizontalTextPosition" type="int" value="0"/>
             <Property name="verticalTextPosition" type="int" value="3"/>

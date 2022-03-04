@@ -39,7 +39,7 @@ def main(webpage, trademark, model, yearstart, yearend, change, km):
     json_path: str = os.path.join(files_path, f'{webpage}.json')
 
     for file in os.listdir(scripts_path):
-        if (webpage in file) and os.path.isfile((json_path)):
+        if (webpage == os.path.splitext(os.path.basename(file))[0]) and os.path.isfile((json_path)):
             scrape = globals()[webpage].main(json_path, trademark, model, yearstart, yearend, change, km)
             df = pd.DataFrame(scrape[0])
             df.to_csv(os.path.join(os.path.expanduser('~'), 'Desktop', scrape[1]), index=False)
