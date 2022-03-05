@@ -22,13 +22,15 @@ public class ScrapPython extends Thread {
     public String yearend;
     public String change;
     public String km;
+    public String download_dir;
     
     public DefaultTableModel tableModel;
     public int id;
 
     public ScrapPython(String webpage, String trademark, String model, 
                     String yearstart, String yearend, String change, 
-                    String km, DefaultTableModel tableModel, int id){
+                    String km, DefaultTableModel tableModel, int id,
+                    String download_dir){
         this.webpage = webpage;
         this.trademark = trademark;
         this.model = model;
@@ -39,13 +41,14 @@ public class ScrapPython extends Thread {
         this.setDaemon(true);
         this.tableModel = tableModel;
         this.id = id;
+        this.download_dir = download_dir;
     }
 
     public String get_command(){
         String env_path = String.join(File.separator, 
             System.getProperty("user.dir"), "resources", "python");
 
-        String[] args = new String[]{webpage, trademark, 
+        String[] args = new String[]{download_dir, webpage, trademark, 
             model, yearstart, yearend, change, km};
 
         for (int k = 0; k < args.length; k++){

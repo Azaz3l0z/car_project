@@ -14,7 +14,7 @@ import milanuncios
 import autoscout24
 
 
-def main(webpage, trademark, model, yearstart, yearend, change, km):
+def main(download_path, webpage, trademark, model, yearstart, yearend, change, km):
     # We fix the Java's input variables
     webpage = webpage.replace("_", " ")
     trademark = trademark.replace("_", " ")
@@ -43,7 +43,7 @@ def main(webpage, trademark, model, yearstart, yearend, change, km):
         if (webpage == os.path.splitext(os.path.basename(file))[0]) and os.path.isfile((json_path)):
             scrape = globals()[webpage].main(json_path, trademark, model, yearstart, yearend, change, km)
             df = pd.DataFrame(scrape[0])
-            df.to_csv(os.path.join(os.path.expanduser('~'), 'Desktop', scrape[1]), index=False)
+            df.to_csv(os.path.join(download_path, scrape[1]), index=False)
 
     with open(os.path.join(scripts_path, test_file), 'w+') as file:
         file.write(scrape[2])

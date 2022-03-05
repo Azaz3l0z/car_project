@@ -150,7 +150,7 @@
           <SubComponents>
             <Component class="javax.swing.JButton" name="download">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Descargar"/>
+                <Property name="text" type="java.lang.String" value="&quot;&quot;"/>
                 <Property name="focusable" type="boolean" value="false"/>
                 <Property name="horizontalTextPosition" type="int" value="0"/>
                 <Property name="verticalTextPosition" type="int" value="3"/>
@@ -161,7 +161,7 @@
             </Component>
             <Component class="javax.swing.JButton" name="config">
               <Properties>
-                <Property name="text" type="java.lang.String" value="jButton1"/>
+                <Property name="text" type="java.lang.String" value="&quot;&quot;"/>
               </Properties>
             </Component>
           </SubComponents>

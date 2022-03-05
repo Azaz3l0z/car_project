@@ -5,27 +5,27 @@
 package GUI;
 
 import java.awt.Color;
-import java.awt.image.BufferedImage;
 import java.awt.Component;
 import java.awt.Image;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.io.FileInputStream;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.JComponent;
 import javax.swing.border.*;
-import javax.swing.Icon;
 import javax.swing.ImageIcon;
-import javax.imageio.ImageIO;
+import javax.swing.JFileChooser;
 
 import java.io.File;
+import java.nio.file.Paths;
+
 import modules.JSONReader;
 import modules.ScrapPython;
 import modules.QueueObserver;
 
 import org.json.simple.JSONObject;
+import org.python.google.common.io.Files;
 import org.json.simple.JSONArray;
 
 
@@ -46,9 +46,13 @@ public class Menu extends javax.swing.JFrame {
 	public Menu() {
 		initComponents();
 		setLocationRelativeTo(null);
+		ImageIcon imageIcon = new ImageIcon("resources/icons/car.png"); // load the image to a imageIcon
+    	Image image = imageIcon.getImage(); // transform it 
+		setIconImage(image);
 		queue = new ArrayBlockingQueue<>(cap);
 		observer = new QueueObserver(queue);
 		observer.start();
+		setDownloadDir();
 		setAll();
 	}
 
@@ -162,18 +166,12 @@ public class Menu extends javax.swing.JFrame {
         jPanel1.setLayout(new java.awt.GridLayout());
 
         download.setText("");
-        download.setFocusable(false);
-        download.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        download.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
         download.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 downloadActionPerformed(evt);
             }
         });
-        try {
-        	File f = new File("resources/icons/download.ico");
-        	System.out.println(f.isFile());
-        	
+        try {        	
         	ImageIcon imageIcon = new ImageIcon("resources/icons/download.png"); // load the image to a imageIcon
         	Image image = imageIcon.getImage(); // transform it 
         	Image newimg = image.getScaledInstance(40, 40,  java.awt.Image.SCALE_SMOOTH); // scale it the smooth way  
@@ -185,7 +183,22 @@ public class Menu extends javax.swing.JFrame {
           }
         jPanel1.add(download);
 
-        config.setText("jButton1");
+        config.setText("");
+        config.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                configActionPerformed(evt);
+            }
+        });
+        try {
+        	ImageIcon imageIcon = new ImageIcon("resources/icons/config.png"); // load the image to a imageIcon
+        	Image image = imageIcon.getImage(); // transform it 
+        	Image newimg = image.getScaledInstance(40, 35,  java.awt.Image.SCALE_SMOOTH); // scale it the smooth way  
+        	imageIcon = new ImageIcon(newimg);  // transform it back
+
+            config.setIcon(imageIcon);
+          } catch (Exception ex) {
+        	  System.out.println(ex.getStackTrace());
+          }
         jPanel1.add(config);
 
         toolbar_panel.add(jPanel1);
@@ -333,19 +346,78 @@ public class Menu extends javax.swing.JFrame {
 		ScrapPython pyprocess = 
 				new ScrapPython(currentWebpage, currentTrademark,
 						currentModel, currentYearStart, currentYearEnd,
-						currentChange, currentKm, tableModel, id);
+						currentChange, currentKm, tableModel, id, download_dir);
 
 		queue.add(pyprocess);
 	}//GEN-LAST:event_downloadActionPerformed
+
+	private void configActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_configActionPerformed
+		JFileChooser chooser = new JFileChooser(); 
+	    chooser.setCurrentDirectory(new File(download_dir));
+	    chooser.setDialogTitle("Carpeta de descargas");
+	    chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+	    //
+	    // disable the "All files" option.
+	    //
+	    chooser.setAcceptAllFileFilterUsed(false);
+	    //    
+	    if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+	    	download_dir = chooser.getSelectedFile().getAbsolutePath();
+	    	
+	    	// We rewrite the settings file
+			File settings = new File(String.join(File.separator, "resources", "settings.json"));
+			JSONReader reader = new JSONReader();	
+			JSONObject settings_json = reader.read(settings.getAbsolutePath());
+			settings_json.put("downloads_path", download_dir);
+			try {
+				Files.write(settings_json.toString().getBytes(), settings);
+			} catch (Exception e) {
+				System.out.println("Wrong path");
+			}
+			
+	    }	else {
+	      System.out.println("No Selection ");
+	      }
+	}
+		
 	private JSONObject json_file;
 	private JSONObject jsonKey_Models;
 	private JSONArray jsonKey_Time;
 	private String kmText;
+	private String download_dir;
 
+	private void setDownloadDir() {
+		File settings = new File(String.join(File.separator, "resources", "settings.json"));
+		
+		if (settings.isFile()) {
+			JSONReader reader = new JSONReader();	
+			JSONObject settings_json = reader.read(settings.getAbsolutePath());
+			download_dir = (String)settings_json.get("downloads_path");
+
+		} else {
+			download_dir = System.getProperty("user.home");
+			if (new File(String.join(File.separator, download_dir, "Descargas")).isDirectory()) {
+				download_dir = String.join(File.separator, download_dir, "Descargas");
+			} else if (new File(String.join(File.separator, download_dir, "Downloads")).isDirectory()) {
+				download_dir = String.join(File.separator, download_dir, "Downloads");
+			}
+		
+			JSONObject settings_json = new JSONObject();
+			settings_json.put("downloads_path", download_dir);
+			try {
+				Files.write(settings_json.toString().getBytes(), settings);
+			} catch (Exception e) {
+				System.out.println("Wrong path");
+			}
+			
+		}
+
+	}
+	
 	private void setAll(){
 		JSONReader reader = new JSONReader();
 		String current_val = String.valueOf(webpage.getSelectedItem());
-		File f = new File("resources/json/"+current_val+".json");
+		File f = new File(String.join(File.separator, "resources", "json", current_val+".json"));
 
 		json_file = reader.read(f.getAbsolutePath());
 		kmText = km.getText();

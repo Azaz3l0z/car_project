@@ -47,23 +47,14 @@ class Scraper(object):
                 json_data = html[html.find(start) + len(start): 
                                 html.find(end)]
                 json_data = json_data.replace('\\', '')
-                
-                with open('test2.txt', 'w+') as file:
-                    file.write(json_data)
 
                 # We remove description tags (They cause many problems)
-
                 json_data = self.delete_tag(json_data, '"description":', '","')
                 json_data = self.delete_tag(json_data, '"seoTitle":', '","')
                 
 
                 json_data = re.sub(r'((?<![:,\[{])")(?![:\],}])', '', json_data)
-                json_data = re.sub(r'\s\d{2}"(?!(,"))', '', json_data)
-
-                with open('test.txt', 'w+') as file:
-                    file.write(json_data)
-                
-                
+                json_data = re.sub(r'\s\d{2}"(?!(,"))', '', json_data)                
                           
                 ads = json.loads(json_data)['adListPagination']['adList']['ads']
                 
@@ -198,8 +189,6 @@ def main(json_path, trademark, model, yearstart, yearend, change, km):
     # Code
     json_file = read_json(json_path)
     url, name = create_url(json_file, trademark, model, yearstart, yearend, change, km)
-    with open(os.path.join(os.path.dirname(json_path), 'name.txt'), 'w+') as file:
-        file.write(name)
     
     scrpr = Scraper(url, 10, json_file)
     
