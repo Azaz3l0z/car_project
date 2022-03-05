@@ -37,6 +37,7 @@ public class Menu extends javax.swing.JFrame {
     
     public Menu() {
         initComponents();
+        setLocationRelativeTo(null);
         queue = new ArrayBlockingQueue<>(cap);
         observer = new QueueObserver(queue);
         observer.start();
@@ -51,7 +52,7 @@ public class Menu extends javax.swing.JFrame {
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
-
+    	
         toolbar_panel = new javax.swing.JPanel();
         webpage = new javax.swing.JComboBox<>();
         trademark = new javax.swing.JComboBox<>();
@@ -252,9 +253,36 @@ public class Menu extends javax.swing.JFrame {
     	String currentChange = String.valueOf(change.getSelectedItem());
     	String currentKm = String.valueOf(km.getText());
         
+    	String dispTrademark = String.valueOf(trademark.getSelectedItem());
+    	String dispModel = String.valueOf(model.getSelectedItem());
+    	String dispYearStart = String.valueOf(yearstart.getSelectedItem());
+    	String dispYearEnd = String.valueOf(yearend.getSelectedItem());
+    	String dispChange = String.valueOf(change.getSelectedItem());
+        
+        
+        if (currentTrademark == "Marca"){
+            dispTrademark = "";
+        }
+        
+        if (currentModel == "Modelo"){
+            dispModel = "";
+        } 
+        
+        if (currentYearStart == "Desde"){
+            dispYearStart = "";
+        }
+        
+        if (currentYearEnd == "Hasta"){
+            dispYearEnd = "";
+        }
+        
+        if (currentChange == "Cambio"){
+            dispChange = "";
+        }
+        
         DefaultTableModel tableModel = (DefaultTableModel) table.getModel();
-        String[] newRow = {currentWebpage, currentTrademark,
-            currentModel, currentYearStart, currentYearEnd, currentChange,
+        String[] newRow = {currentWebpage, dispTrademark,
+            dispModel, dispYearStart, dispYearEnd, dispChange,
             currentKm, "No"};
         
         tableModel.addRow(newRow);
@@ -272,10 +300,6 @@ public class Menu extends javax.swing.JFrame {
                 id = k;
             }
         }
-        
-        System.out.println(id);
-        
-        
         ScrapPython pyprocess = 
                 new ScrapPython(currentWebpage, currentTrademark,
             currentModel, currentYearStart, currentYearEnd,

@@ -23,6 +23,14 @@ class Scraper(object):
         self.get_url()
         self.sort()
 
+    def delete_tag(self, json_data: str, ini_str: str, end_str):
+        while (ini_str in json_data):
+            ini_idx = json_data.find(ini_str)
+            end_idx = json_data[ini_idx:].find(end_str) + ini_idx + len(end_str) - 1
+            json_data = json_data[:ini_idx]+json_data[end_idx:]
+
+        return json_data
+
     def get_ads(self):
         # We paginate over n pages and get a the script that build the page
         session = requests.Session()
@@ -39,17 +47,23 @@ class Scraper(object):
                 json_data = html[html.find(start) + len(start): 
                                 html.find(end)]
                 json_data = json_data.replace('\\', '')
+                
+                with open('test2.txt', 'w+') as file:
+                    file.write(json_data)
 
                 # We remove description tags (They cause many problems)
-                ini_str = '"description":'
-                end_str = '","'
-                while (ini_str in json_data):
-                    ini_idx = json_data.find(ini_str)
-                    end_idx = json_data[ini_idx:].find(end_str) + ini_idx + len(end_str) - 1
-                    json_data = json_data[:ini_idx]+json_data[end_idx:]
+
+                json_data = self.delete_tag(json_data, '"description":', '","')
+                json_data = self.delete_tag(json_data, '"seoTitle":', '","')
+                
 
                 json_data = re.sub(r'((?<![:,\[{])")(?![:\],}])', '', json_data)
                 json_data = re.sub(r'\s\d{2}"', '', json_data)
+
+                with open('test.txt', 'w+') as file:
+                    file.write(json_data)
+                
+                
                           
                 ads = json.loads(json_data)['adListPagination']['adList']['ads']
                 

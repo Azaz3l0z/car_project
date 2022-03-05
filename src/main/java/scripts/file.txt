@@ -1,1 +1,1 @@
-https://www.coches.net/segunda-mano/ABARTH/124 Spider/?&st=2&pg={pagina}
+https://www.autoscout24.es/lst/Chevrolet/?sort=age&desc=1&custtype=P&ustate=N%2CU&size=20&cy=E&atype=C&&fregto=1989&gear=A&page={pagina}

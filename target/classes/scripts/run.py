@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import pandas as pd
+from time import time
 
 # To upload files to dropbox
 from datetime import datetime
@@ -49,7 +50,9 @@ def main(webpage, trademark, model, yearstart, yearend, change, km):
 
     
 if __name__ == "__main__":
+    t0 = time()
     main(*sys.argv[1:])
-
+    t1 = time()
+    print(f'{t1-t0:.2f}s')
     
 

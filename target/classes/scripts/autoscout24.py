@@ -70,9 +70,16 @@ class Scraper(object):
             print(k)
             r = self.session.get(self.url.format(pagina=k))
             try:
-                all_ads = BeautifulSoup(r.text, 'html.parser').find("div", {"class": "cl-list-elements"})
+                soup = BeautifulSoup(r.text, 'html.parser')
+                n_ofertas = soup.find("span", class_="sc-font-bold cl-filters-summary-counter").getText()
+                n_ofertas = re.search(r'\d+', n_ofertas).group()
+                print(n_ofertas)
+                if 20*(k-1) >= int(n_ofertas):
+                    break
+                all_ads = soup.find("div", {"class": "cl-list-elements"})
                 cards = all_ads.find_all("div", class_="cl-list-element cl-list-element-gap")
                 self.ads.extend(cards)
+
             except AttributeError:
                 break
     
@@ -181,7 +188,7 @@ def create_url(frame, trademark, model, yearstart, yearend, change, km):
     # Definitions
     url = 'https://www.autoscout24.es/lst/{marca}{{model}}' +\
         '?sort=age&desc=1' + \
-        '&custtype=P&ustate=N%2CU&size=20&page=1&cy=E&atype=C&'
+        '&custtype=P&ustate=N%2CU&size=20&cy=E&atype=C&'
     name = os.path.splitext(os.path.basename(__file__))[0]
 
     # Create url and file_name
