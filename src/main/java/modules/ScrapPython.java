@@ -43,8 +43,7 @@ public class ScrapPython extends Thread {
 
     public String get_command(){
         String env_path = String.join(File.separator, 
-            System.getProperty("user.dir"), "src", "main", 
-            "java", "scripts");
+            System.getProperty("user.dir"), "resources", "python");
 
         String[] args = new String[]{webpage, trademark, 
             model, yearstart, yearend, change, km};
