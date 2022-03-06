@@ -64,8 +64,7 @@ class Scraper(object):
             print(n)
             r = session.get(self.url.format(pagina=n), headers=headers)
             html = r.text
-            with open('test.txt', 'w+') as file:
-                file.write(html)
+
             soup = BeautifulSoup(html, 'html.parser')
             n_ads = soup.find("h1", {"class": "mt-TitleBasic-title mt-TitleBasic-title--xs mt-TitleBasic-title--black"}).getText()
             n_ads = re.match(r'\d+', n_ads).group()

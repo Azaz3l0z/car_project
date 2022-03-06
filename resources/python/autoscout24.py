@@ -37,7 +37,6 @@ class Worker(threading.Thread):
                 phone = phone[:9][::-1]
 
             self.p_list.append({n: phone})
-            print({n: phone})
             # End
             self.queue.task_done()
 
@@ -67,13 +66,13 @@ class Scraper(object):
         self.session = requests.Session()
 
         for k in range(1, self.pages + 1):
-            print(k)
             r = self.session.get(self.url.format(pagina=k))
             try:
                 soup = BeautifulSoup(r.text, 'html.parser')
                 n_ofertas = soup.find("span", class_="sc-font-bold cl-filters-summary-counter").getText()
+                n_ofertas = n_ofertas.replace('.', '').replace(',', '')
                 n_ofertas = re.search(r'\d+', n_ofertas).group()
-                print(n_ofertas)
+
                 if 20*(k-1) >= int(n_ofertas):
                     break
                 all_ads = soup.find("div", {"class": "cl-list-elements"})
