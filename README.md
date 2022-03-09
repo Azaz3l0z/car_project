@@ -11,5 +11,16 @@ what you want to download specifically and from which website. With the config
 button you can choose where the file will be downloaded.
 
 ## Setting it up
-### Lmaao
+### Windows
+The idea of this GUI is for it to be available to anyone with java installed in
+their devices and nothing else. To achieve this we use pyinstaller to compile
+the python modules into a single executable (using a virtual environment) to 
+achieve less memory usage, Launch4J, to create the Java executable, and Inno 
+setup, to create an installer.
+
+Launch4J and Inno setup must be configured manually, but you can automate
+creating a virtual-env with python and an executable with the following code:
+```
+pip
+```
 
