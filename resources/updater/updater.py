@@ -1,6 +1,7 @@
 import os
 import sys
 import requests
+import platform
 
 from bs4 import BeautifulSoup
 
@@ -21,7 +22,8 @@ def tree_download(link: str, tag: str, dir: str, filter_dirs: list):
         if item not in filter_dirs:
             if '.' not in item:
                 item_dir = os.path.join(dir, item)
-                os.makedirs(item_dir)
+                if not os.path.isdir(item_dir):
+                    os.makedirs(item_dir)
                 tree_download(url, tag, item_dir, filter_dirs)
             else:
                 link = url.replace('/blob', '').replace('https://github.com', 
@@ -44,12 +46,14 @@ def tree_download(link: str, tag: str, dir: str, filter_dirs: list):
                             sys.stdout.write("\r[%s%s]" % ('=' * done, ' ' * (50-done)) )    
                             sys.stdout.flush()
                     print()
-            break
             
-def update():
-    url = 'https://github.com/Azaz3l0z/car_project/tree/javagui/resources'
-    tag = 'Box-row Box-row--focus-gray py-2 d-flex position-relative js-navigation-item'
+def main():
+    url = 'https://github.com/Azaz3l0z/car_project/'+\
+          'tree/{sys}/resources'.format(sys=platform.system().lower())
+    tag = 'Box-row Box-row--focus-gray py-2 d-flex position-relative '+\
+          'js-navigation-item'
     tree_download(url, tag, os.path.join(application_path, 'resources'),
         ['updater'])
 
-update()
+if __name__ == "__main__":
+    main()

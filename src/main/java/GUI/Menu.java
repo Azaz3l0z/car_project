@@ -21,12 +21,13 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import org.json.simple.JSONObject;
+import org.json.simple.JSONArray;
+
 import modules.JSONReader;
 import modules.ScrapPython;
 import modules.QueueObserver;
-
-import org.json.simple.JSONObject;
-import org.json.simple.JSONArray;
+import modules.Updater;
 
 /**
  *
@@ -516,6 +517,7 @@ public class Menu extends javax.swing.JFrame {
 		/* Create and display the form */
 		java.awt.EventQueue.invokeLater(new Runnable() {
 			public void run() {
+				Updater.update();
 				new Menu().setVisible(true);
 			}
 		});
