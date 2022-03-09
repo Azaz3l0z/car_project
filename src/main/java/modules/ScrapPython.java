@@ -4,11 +4,12 @@
  */
 package modules;
 
-import java.io.*;
+import java.io.File;
 import java.lang.Process;
 import java.lang.Runtime;
-import java.io.File;
 import javax.swing.table.DefaultTableModel;
+
+import modules.CheckOS;
 
 /**
  *
@@ -45,6 +46,14 @@ public class ScrapPython extends Thread {
     }
 
     public String get_command(){
+    	String OS = CheckOS.get_OS();
+    	String ext = "";
+    	if (OS == "windows") {
+    		ext = ".exe";
+    	} else if (OS == "linux") {
+    		ext = "";
+    	}
+    		
         String env_path = String.join(File.separator, 
             System.getProperty("user.dir"), "resources", "python");
 
@@ -56,10 +65,7 @@ public class ScrapPython extends Thread {
         }
 
         String command = 
-            String.join(File.separator, env_path, "env",
-                            "bin", "python3") 
-            + " "
-            + String.join(File.separator, env_path, "run.py")
+            String.join(File.separator, env_path, "run"+ext)
             + " " + String.join(" ", args)
             ;
         return command;

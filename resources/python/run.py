@@ -15,6 +15,13 @@ import autoscout24
 
 
 def main(download_path, webpage, trademark, model, yearstart, yearend, change, km):
+    if getattr(sys, 'frozen', False):
+        application_path = sys.executable
+    elif __file__:
+        application_path = __file__
+    
+    print(application_path)
+
     # We fix the Java's input variables
     webpage = webpage.replace("_", " ")
     trademark = trademark.replace("_", " ")
@@ -35,7 +42,7 @@ def main(download_path, webpage, trademark, model, yearstart, yearend, change, k
 
     # We define useful strings and start scraping
     test_file = 'file.txt'
-    scripts_path: str = os.path.dirname(os.path.abspath(__file__))
+    scripts_path: str = os.path.dirname(os.path.abspath(application_path))
     files_path: str = os.path.join(os.path.dirname(scripts_path), 'json')
     json_path: str = os.path.join(files_path, f'{webpage}.json')
 
@@ -45,10 +52,6 @@ def main(download_path, webpage, trademark, model, yearstart, yearend, change, k
             df = pd.DataFrame(scrape[0])
             df.to_csv(os.path.join(download_path, scrape[1]), index=False)
 
-    with open(os.path.join(scripts_path, test_file), 'w+') as file:
-        file.write(scrape[2])
-
-    
 if __name__ == "__main__":
     t0 = time()
     main(*sys.argv[1:])
