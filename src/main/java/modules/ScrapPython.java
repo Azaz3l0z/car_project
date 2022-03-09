@@ -49,7 +49,7 @@ public class ScrapPython extends Thread {
     	if (OS == "windows") {
     		ext = ".exe";
     	} else if (OS == "linux") {
-    		ext = "";
+    		ext = ".sh";
     	}
     		
         String env_path = String.join(File.separator, 

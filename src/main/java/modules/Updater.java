@@ -9,7 +9,7 @@ public class Updater {
     	if (OS == "windows") {
     		ext = ".exe";
     	} else if (OS == "linux") {
-    		ext = "";
+    		ext = ".sh";
     	}
     		
         String command = String.join(File.separator, 

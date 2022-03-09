@@ -51,9 +51,8 @@ class Worker(threading.Thread):
                 if html[idx] == '[':
                     count += 1
                 idx += 1
-            print(work)
             self.p_list[work] = json.loads(html[start_idx - 1 + len(find_str):idx])
-            
+            print(work)
             # End
             self.queue.task_done()
 
@@ -92,16 +91,22 @@ class JSONDownloader(object):
         for marca in json_data:
             self.queue.put(marca['label'])
 
-        for k in range(10):
+        for _ in range(10):
             Worker(self.queue, self.url, self.placeholder_list).start()
 
         self.queue.join()
         for marca in json_data:
             models = {}
             print(marca)
-            for k in self.placeholder_list[marca['label']]:
+            todo_fix = '--------------'
+            for k in self.placeholder_list[marca['label']]: 
                 if k['isModel']:
+                    if todo_fix.replace('(todo)', '').replace('Clase', '').strip() not in k['name']:
+                        models[k['name']] = k['id']
+                else:
+                    todo_fix = k['name']
                     models[k['name']] = k['id']
+
             self.json_file['models'][marca['label']] = {'id': marca['id'], 'models': models}
 
     def get_time(self):
