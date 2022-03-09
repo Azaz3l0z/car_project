@@ -56,7 +56,7 @@ def main():
           'tree/{sys}/resources'.format(sys=platform.system().lower())
     tag = 'Box-row Box-row--focus-gray py-2 d-flex position-relative '+\
           'js-navigation-item'
-    tree_download(url, tag, os.path.join(application_path, 'resources'),
+    tree_download(url, tag, os.path.dirname(application_path),
         ['updater'])
 
 if __name__ == "__main__":

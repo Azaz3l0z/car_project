@@ -53,6 +53,7 @@ public class Menu extends javax.swing.JFrame {
 		observer.start();
 		setDownloadDir();
 		setAll();
+		setChangeMenu();
 	}
 
 	/**
@@ -426,7 +427,6 @@ public class Menu extends javax.swing.JFrame {
 		kmText = km.getText();
 		setTrademarkMenu();
 		setTimeMenu();
-		setChangeMenu();
 	}
 
 	private void setTrademarkMenu(){
