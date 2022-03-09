@@ -17,10 +17,11 @@ def tree_download(link: str, tag: str, dir: str, filter_dirs: list):
     items_txt = [x.getText().replace('\n', ' ').split()[0] for x in items]
     items_url = ['https://github.com' + 
                 x.find("a").attrs['href'] for x in items]
-    
-    for item, url in zip(items_txt, items_url):
+    items_typ = [x.find("svg").attrs['aria-label'] for x in items]
+
+    for item, url, type in zip(items_txt, items_url, items_typ):
         if item not in filter_dirs:
-            if '.' not in item:
+            if type == "Directory":
                 item_dir = os.path.join(dir, item)
                 if not os.path.isdir(item_dir):
                     os.makedirs(item_dir)
@@ -28,7 +29,6 @@ def tree_download(link: str, tag: str, dir: str, filter_dirs: list):
             else:
                 link = url.replace('/blob', '').replace('https://github.com', 
                     'https://raw.githubusercontent.com')
-                print(link)
                 with open(os.path.join(dir,item), "wb") as f:
                     print("Downloading %s" % item)
                     response = requests.get(link, stream=True)
@@ -39,13 +39,17 @@ def tree_download(link: str, tag: str, dir: str, filter_dirs: list):
                     else:
                         dl = 0
                         total_length = int(total_length)
-                        for data in response.iter_content(chunk_size=4096):
+                        disp_bars = 25
+                        for data in response.iter_content(chunk_size=int(total_length/disp_bars)):
                             dl += len(data)
                             f.write(data)
-                            done = int(50 * dl / total_length)
-                            sys.stdout.write("\r[%s%s]" % ('=' * done, ' ' * (50-done)) )    
+                            done = int(disp_bars * dl / total_length)
+                            if done > disp_bars:
+                                done = disp_bars
+                            sys.stdout.write("\r[%s%s]" % ('=' * done, ' ' * (disp_bars-done)) )    
                             sys.stdout.flush()
-                    print()
+
+                    print('\n')
             
 def main():
     url = 'https://github.com/Azaz3l0z/car_project/'+\

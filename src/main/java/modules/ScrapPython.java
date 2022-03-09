@@ -9,8 +9,6 @@ import java.lang.Process;
 import java.lang.Runtime;
 import javax.swing.table.DefaultTableModel;
 
-import modules.CheckOS;
-
 /**
  *
  * @author azazel
