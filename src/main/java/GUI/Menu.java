@@ -514,10 +514,15 @@ public class Menu extends javax.swing.JFrame {
 		}
 		//</editor-fold>
 
+		try {
+			Updater updater = new Updater();
+			updater.update();
+		} catch (Exception e){
+			e.getStackTrace();
+		}
 		/* Create and display the form */
 		java.awt.EventQueue.invokeLater(new Runnable() {
 			public void run() {
-				Updater.update();
 				new Menu().setVisible(true);
 			}
 		});

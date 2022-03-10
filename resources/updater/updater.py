@@ -10,6 +10,7 @@ if getattr(sys, 'frozen', False):
 elif __file__:
     application_path = os.path.dirname(os.path.abspath(__file__))
 
+
 def tree_download(link: str, tag: str, dir: str, filter_dirs: list):
     link = requests.get(link)
     soup = BeautifulSoup(link.text, 'html.parser')
@@ -48,8 +49,6 @@ def tree_download(link: str, tag: str, dir: str, filter_dirs: list):
                                 done = disp_bars
                             sys.stdout.write("\r[%s%s]" % ('=' * done, ' ' * (disp_bars-done)) )    
                             sys.stdout.flush()
-
-                    print('\n')
             
 def main():
     url = 'https://github.com/Azaz3l0z/car_project/'+\
