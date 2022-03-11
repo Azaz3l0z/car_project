@@ -390,12 +390,27 @@ public class Menu extends javax.swing.JFrame {
 
 	private void setDownloadDir() {
 		File settings = new File(String.join(File.separator, "resources", "settings.json"));
-
+		boolean file_correct = false;
 		if (settings.isFile()) {
 			JSONReader reader = new JSONReader();	
 			JSONObject settings_json = reader.read(settings.getAbsolutePath());
 			download_dir = (String)settings_json.get("downloads_path");
-
+			if (download_dir == null) {
+				download_dir = System.getProperty("user.home");
+				if (new File(String.join(File.separator, download_dir, "Descargas")).isDirectory()) {
+					download_dir = String.join(File.separator, download_dir, "Descargas");
+				} else if (new File(String.join(File.separator, download_dir, "Downloads")).isDirectory()) {
+					download_dir = String.join(File.separator, download_dir, "Downloads");
+				}
+				settings_json.put("downloads_path", download_dir);
+				try {
+					FileWriter myWriter = new FileWriter(settings.getAbsoluteFile());
+					myWriter.write(settings_json.toString());
+					myWriter.close();
+				} catch (Exception e) {
+					System.out.println("Wrong path");
+				}
+			}
 		} else {
 			download_dir = System.getProperty("user.home");
 			if (new File(String.join(File.separator, download_dir, "Descargas")).isDirectory()) {

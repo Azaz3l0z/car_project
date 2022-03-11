@@ -81,10 +81,10 @@ def main():
     is_new_ver = new_ver()
     if is_new_ver:
         url = 'https://github.com/Azaz3l0z/car_project/'+\
-            'tree/{sys}'.format(sys=platform.system().lower())
+            'tree/{sys}/resources'.format(sys=platform.system().lower())
         tag = 'Box-row Box-row--focus-gray py-2 d-flex position-relative '+\
             'js-navigation-item'
-        tree_download(url, tag, os.path.dirname(os.path.dirname(application_path)),
+        tree_download(url, tag, os.path.dirname(application_path),
             ['updater'])
 
 if __name__ == "__main__":
