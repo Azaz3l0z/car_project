@@ -1,5 +1,7 @@
 import os
 import sys
+import json
+from turtle import up
 import requests
 import platform
 
@@ -9,7 +11,6 @@ if getattr(sys, 'frozen', False):
     application_path = os.path.dirname(sys.executable)
 elif __file__:
     application_path = os.path.dirname(os.path.abspath(__file__))
-
 
 def tree_download(link: str, tag: str, dir: str, filter_dirs: list):
     link = requests.get(link)
@@ -49,14 +50,42 @@ def tree_download(link: str, tag: str, dir: str, filter_dirs: list):
                                 done = disp_bars
                             sys.stdout.write("\r[%s%s]" % ('=' * done, ' ' * (disp_bars-done)) )    
                             sys.stdout.flush()
+
+
+def new_ver() -> bool:
+    url = 'https://github.com/Azaz3l0z/car_project/releases/latest'
+    r = requests.get(url)
+    ver = r.url.split('/')[-1]
+    settings_path = os.path.join(os.path.dirname(application_path), 'settings.json')
+    update_bool = False
+
+    with open(settings_path, 'a+') as file:
+        file.seek(0)
+        try:
+            data = json.loads(file.read())
+            old_ver = data.get('version')
+            if (old_ver == None) or (old_ver != ver):
+                data['version'] = ver
+                update_bool = True
             
+        except json.JSONDecodeError as e:
+            data = {'version': ver}
+            update_bool = True
+
+    with open(settings_path, 'w+') as file:
+        file.write(json.dumps(data))
+    
+    return update_bool
+
 def main():
-    url = 'https://github.com/Azaz3l0z/car_project/'+\
-          'tree/{sys}/resources'.format(sys=platform.system().lower())
-    tag = 'Box-row Box-row--focus-gray py-2 d-flex position-relative '+\
-          'js-navigation-item'
-    tree_download(url, tag, os.path.dirname(application_path),
-        ['updater'])
+    is_new_ver = new_ver()
+    if is_new_ver:
+        url = 'https://github.com/Azaz3l0z/car_project/'+\
+            'tree/{sys}'.format(sys=platform.system().lower())
+        tag = 'Box-row Box-row--focus-gray py-2 d-flex position-relative '+\
+            'js-navigation-item'
+        tree_download(url, tag, os.path.dirname(os.path.dirname(application_path)),
+            ['updater'])
 
 if __name__ == "__main__":
     main()
