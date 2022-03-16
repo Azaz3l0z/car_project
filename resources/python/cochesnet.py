@@ -204,7 +204,7 @@ def create_url(frame, trademark, model, yearstart, yearend, change, km):
 
     if change != "Cambio":
         cambios = ['A', 'M']
-        url += f'&TransmissionTypeId={cambios.index[km[0]] + 1}'
+        url += f'&TransmissionTypeId={cambios.index(change[0]) + 1}'
         name += "_" + change
     
     if (km != "Hastaxkm") and (km != ""):
