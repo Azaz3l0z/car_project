@@ -1,3 +1,4 @@
+import enum
 import os
 import re
 import json
@@ -66,18 +67,22 @@ class Scraper(object):
         self.session = requests.Session()
 
         for k in range(1, self.pages + 1):
-            r = self.session.get(self.url.format(pagina=k))
+            r = self.session.get(self.url.format(page=k))
+            print(self.url.format(page=k))
             try:
                 soup = BeautifulSoup(r.text, 'html.parser')
-                n_ofertas = soup.find("span", class_="sc-font-bold cl-filters-summary-counter").getText()
+                n_ofertas = self.get_text_tag(r.text, 'Oferta')
                 n_ofertas = n_ofertas.replace('.', '').replace(',', '')
-                n_ofertas = re.search(r'\d+', n_ofertas).group()
+                n_ofertas = re.search(r'(?<=\>)(\d+)(?=\<)', n_ofertas).group()
 
                 if 20*(k-1) >= int(n_ofertas):
                     break
-                all_ads = soup.find("div", {"class": "cl-list-elements"})
-                cards = all_ads.find_all("div", class_="cl-list-element cl-list-element-gap")
-                self.ads.extend(cards)
+
+                ads = soup.find('script', {'type': 'application/json'}).getText()
+                ads = json.loads(ads)['props']['pageProps']['listings']
+
+                self.ads.extend(ads)
+                print(len(self.ads))
 
             except AttributeError:
                 break
@@ -88,8 +93,9 @@ class Scraper(object):
         self.queue = queue.Queue()
 
         for n, ad in enumerate(self.ads):
-            url = ad.find("a", {"data-item-name": "detail-page-link"}).attrs['href']
-            url = 'https://www.autoscout24.es' + ad.find("a", {"data-item-name": "detail-page-link"}).attrs["href"]
+            url = ad['url']
+            url = 'https://www.autoscout24.es' + url
+
             self.urls.append(url)
             self.queue.put([url, n])
         
@@ -110,18 +116,8 @@ class Scraper(object):
         self.model = []
 
         for ad in self.ads:
-            txt = ad.find("h2", {"class": "cldt-summary-makemodel sc-font-bold sc-ellipsis"}).getText()
-            txt = txt.split()
-            trademark = ""
-            model = ""
-
-            for n, word in enumerate(txt):
-                trademark += word
-                if trademark in self.json_file['models']:
-                    model = " ".join(txt[n+1:])
-                    break
-                else:
-                    trademark += " "
+            trademark = ad['vehicle']['make']
+            model = ad['vehicle']['model']
 
             self.trademark.append(trademark)
             self.model.append(model)
@@ -134,20 +130,22 @@ class Scraper(object):
         self.year = []
         self.change = []
 
-        for k, ad in enumerate(self.ads):
-            ul = ad.find("ul", {"data-item-name": "vehicle-details"})
-            
-            km = ul.find("li", {"data-type": "mileage"}).getText()
-            year = ul.find("li", {"data-type": "first-registration"}).getText()
-            change = ul.find("li", {"data-type": 
-                "transmission-type"}).getText()
-            
-            if 'km' in km:
-                km = re.match(r'\d+', 
-                    km.replace('\n', '').replace('.', '').replace('km', 
-                    '')).group()
-            year = re.search(r'\d{4}', year).group()
-            change = change.replace('\n', '').replace('- (Cambio)', '')
+        for ad in self.ads:
+            ad = ad['vehicle']
+            if ad.get('mileageInKm', None) != None:
+                km = ad['mileageInKm']['raw']
+            else:
+                km = None
+
+            if ad.get('firstRegistrationDate', None) != None:
+                year = ad['firstRegistrationDate']['raw'][:4]
+            else:
+                year = None
+
+            if ad.get('transmissionType', None) != None:
+                change = ad['transmissionType']['formatted']
+            else:
+                change = None
 
             self.km.append(km)
             self.year.append(year)
@@ -165,17 +163,28 @@ class Scraper(object):
 
         self.data_dict = df.to_dict('list')
 
-    def fix_kms(self, kms):
-        df = pd.DataFrame(self.data_dict)
-        for n, km in enumerate(df['Km']):
-            if int(km) > int(kms):
-                df = df.drop([n])
-
-        self.data_dict = df.to_dict('list')
-
     def sort(self):
         self.data_dict = {x: self.data_dict[x] for x in self.keys}            
 
+    @staticmethod
+    def get_text_tag(html: str, text: str):
+        ini_idx = html.find(text)
+        end_idx = ini_idx + len(text)
+        
+        def before():
+            before_html = html[:ini_idx][::-1]
+            for n, char in enumerate(before_html):
+                if char == '<' and before_html[n-1] != '!':
+                    return before_html[:n+1][::-1]
+        
+        def after():
+            after_html = html[end_idx:]
+            for n, char in enumerate(after_html):
+                if char == '<' and after_html[n+1] == '/':
+                    for i, char in enumerate(after_html[n:]):
+                        if char == '>':
+                            return after_html[:i + n + 1]
+        return before() + text + after()
 
 # First we read the json
 def read_json(path: str):
@@ -227,7 +236,7 @@ def create_url(frame, trademark, model, yearstart, yearend, change, km):
         name += "_kmMax" + km
     
     name += ".csv"
-    url += "&page={pagina}"
+    url += "&page={page}"
 
     return url, name
 
@@ -237,8 +246,6 @@ def main(json_path, trademark, model, yearstart, yearend, change, km):
     url, name = create_url(json_file, trademark, model, yearstart, yearend, 
         change, km)
     
-    scrpr = Scraper(url, 10, json_file)
-    if (km != 'Hastaxkm') and (km != ""):
-        scrpr.fix_kms(km)
+    scrpr = Scraper(url, 1000, json_file)
 
     return scrpr.data_dict, name, url

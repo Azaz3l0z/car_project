@@ -222,5 +222,5 @@ def main(json_path, trademark, model, yearstart, yearend, change, km):
     url, name = create_url(json_file, trademark, model, yearstart, yearend, 
         change, km)
 
-    scrpr = Scraper(url, 10, json_file, change)
+    scrpr = Scraper(url, 1000, json_file, change)
     return scrpr.data_dict, name, url

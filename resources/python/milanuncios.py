@@ -190,7 +190,7 @@ def main(json_path, trademark, model, yearstart, yearend, change, km):
     json_file = read_json(json_path)
     url, name = create_url(json_file, trademark, model, yearstart, yearend, change, km)
     
-    scrpr = Scraper(url, 10, json_file)
+    scrpr = Scraper(url, 1000, json_file)
     
     return scrpr.data_dict, name, url
 
