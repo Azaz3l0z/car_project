@@ -72,13 +72,14 @@ public class ScrapPython extends Thread {
     public void run() {
         try {
             String command = get_command();
+            System.out.println(command);
             Process process = Runtime.getRuntime().exec(command);
             while (process.isAlive()){
 
             }
             
             tableModel.setValueAt("Si", id, 7);
-            System.out.println(command);
+            
 
         } catch (Exception e) {
         }
