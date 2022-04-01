@@ -1,3 +1,4 @@
+import enum
 import os
 import re
 import json
@@ -26,15 +27,12 @@ class Worker(threading.Thread):
 
             # do whatever work you have to do on work
             r = requests.get(url)
-            soup = BeautifulSoup(r.text, 'html.parser')
-            phone = soup.find("a", {"id": "js-original-phone-number"})
+            phone = re.search(r'tel:\+?\d{9,11}', r.text)
 
             if phone != None:
-                phone = phone.getText()
-                phone = phone[::-1]
-                phone = phone.replace(' ', '')
-                phone = phone.replace('-', '')
-                phone = phone[:9][::-1]
+                phone = phone.group()
+                phone = phone.replace('tel:', '').replace('+34', '')
+            
             self.p_list.append({n: phone})
             # End
             self.queue.task_done()
@@ -52,33 +50,6 @@ class Scraper(object):
         self.create_soup()
         self.doAll()
 
-    def create_soup(self):
-        self.session = requests.Session()
-        for k in range(1, self.pages + 1):
-            r = self.session.get(self.url.format(page=k))
-            html = r.text
-            try:
-                soup = BeautifulSoup(html, 'html.parser')
-                if k == 1:
-                    n_ofertas = soup.find_all('as24-tracking')
-                    for trackers in n_ofertas:
-                        try:
-                            if 'search_numberOfArticles' in trackers.attrs['as24-tracking-value']:
-                                n_ofertas = json.loads(trackers.attrs['as24-tracking-value'])
-                                n_ofertas = n_ofertas['search_numberOfArticles']
-                        except:
-                            pass
-
-                if 20*(k-1) >= int(n_ofertas):
-                    break
-
-                ads = soup.find_all('div', {'class': 'cl-list-element cl-list-element-gap'})
-
-                self.ads.extend(ads)
-
-            except AttributeError:
-                break
-
     def doAll(self):
         th = threading.Thread(target=self.get_phones_and_url, daemon=True)
         th.start()
@@ -88,14 +59,38 @@ class Scraper(object):
         self.filter()
         self.sort()
 
+    def create_soup(self):
+        self.session = requests.Session()
+
+        for k in range(1, self.pages + 1):
+            r = self.session.get(self.url.format(page=k))
+            html = r.text
+            try:
+                if k == 1:
+                    soup = BeautifulSoup(html, 'html.parser')
+                    n_ofertas = html.find('Ofertas')
+                    n_ofertas = html[n_ofertas - 100:n_ofertas]
+                    n_ofertas = n_ofertas.replace('.', '').replace(',', '')
+                    n_ofertas = re.search(r'(?<=\>)(\d+)(?=\<)', n_ofertas).group()
+
+                if 20*(k-1) >= int(n_ofertas):
+                    break
+
+                ads = soup.find('script', {'type': 'application/json'}).getText()
+                ads = json.loads(ads)['props']['pageProps']['listings']
+
+                self.ads.extend(ads)
+
+            except AttributeError:
+                break
+    
     def get_phones_and_url(self):
         self.urls = []
         self.phone = []
         self.queue = queue.Queue()
 
         for n, ad in enumerate(self.ads):
-            url = ad.find('a', {'data-item-name': 'detail-page-link'})
-            url = url.attrs['href']
+            url = ad['url']
             url = 'https://www.autoscout24.es' + url
 
             self.urls.append(url)
@@ -118,21 +113,8 @@ class Scraper(object):
         self.model = []
 
         for ad in self.ads:
-            title = ad.find('h2', 
-                {'class': 'cldt-summary-makemodel sc-font-bold sc-ellipsis'})
-            title = title.getText().split()
-            txt = ''
-            for word in title:
-                txt += word
-                if txt in self.json_file['models']:
-                    trademark = txt
-                    break
-                else:
-                    txt += ' '
-            title = ' '.join(title)
-            title = title.replace(trademark, '')
-
-            model = title.strip()
+            trademark = ad['vehicle']['make']
+            model = ad['vehicle']['model']
 
             self.trademark.append(trademark)
             self.model.append(model)
@@ -146,23 +128,21 @@ class Scraper(object):
         self.change = []
 
         for ad in self.ads:
-            tags = ad.find('ul', {'data-item-name': 'vehicle-details'})
+            ad = ad['vehicle']
+            if ad.get('mileageInKm', None) != None:
+                km = ad['mileageInKm']['raw']
+            else:
+                km = None
 
-            km = tags.find('li', {'data-type': 'mileage'})
-            year = tags.find('li', {'data-type': 'first-registration'})
-            change = tags.find('li', {'data-type': 'transmission-type'})
+            if ad.get('firstRegistrationDate', None) != None:
+                year = ad['firstRegistrationDate']['raw'][:4]
+            else:
+                year = None
 
-            if km != None:
-                km = km.getText()
-                km = km.replace('.', '').replace(',', '').replace('km', '')
-                km = km.strip()
-
-            if year != None:
-                year = re.search(r'\d{4}', year.get_text()).group().strip()
-
-            if change != None:
-                change = change.getText().strip()
-                change = change.replace('- (Cambio)', '')
+            if ad.get('transmissionType', None) != None:
+                change = ad['transmissionType']['formatted']
+            else:
+                change = None
 
             self.km.append(km)
             self.year.append(year)
@@ -188,33 +168,23 @@ def read_json(path: str):
     with open(path, 'r+') as file:
         return json.loads(file.read())
 
+
 def create_url(frame, trademark, model, yearstart, yearend, change, km):
     # Definitions
-
-    url = 'https://www.autoscout24.es/classified-list/react-listelements/es?='+\
-        '&isSeoListPage=true'+\
-        '&sort=age'+\
-        '&desc=1'+\
-        '&custtype=P'+\
-        '&ustate=N,U'+\
-        '&size=20'+\
-        '&cy=E'+\
-        '&mmm={marca}|{{model}}|'+\
-        '&fregto=2019'+\
-        '&atype=C'+\
-        '&recommended_sorting_based_id=b62d0fbc-c44a-40cf-b2e9-23e3dc70fdb0'
-
+    url = 'https://www.autoscout24.es/lst/{marca}{{model}}' +\
+        '?sort=age&desc=1' + \
+        '&custtype=P&ustate=N%2CU&size=20&cy=E&atype=C&'
     name = os.path.splitext(os.path.basename(__file__))[0]
 
     # Create url and file_name
     if trademark != "Marca":
-        url = url.format(marca=frame['models'][trademark]['id'])
+        url = url.format(marca=trademark+'/')
         name += "_" + trademark
     else:
         url = url.format(marca="")
 
     if model != "Modelo":
-        url = url.format(model=frame['models'][trademark]['models'][model]['id'])
+        url = url.format(model=model)
         name += "_" + model
     else:
         url = url.format(model="")
@@ -252,7 +222,7 @@ def main(json_path, trademark, model, yearstart, yearend, change, km):
     json_file = read_json(json_path)
     url, name = create_url(json_file, trademark, model, yearstart, yearend, 
         change, km)
-    
+    print(url)
     scrpr = Scraper(url, 1000, json_file)
 
     return scrpr.data_dict, name, url
